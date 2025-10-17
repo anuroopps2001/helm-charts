@@ -1,0 +1,33 @@
+replicaCount: 1
+image:
+  repository: myorg/myapp
+  tag: "latest"
+  pullPolicy:
+  pullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  host: ""
+  path: /
+
+resources: {}
+
+env:
+  APP_MODE: "development"
+  LOG_LEVEL: "info"
+
+persistence:
+  enabled: false
+  size: 1Gi
+  accessMode: ReadWriteOnce
+  storageClass: ""
+
+livenessProbe: {}
+readinessProbe: {}
+
+rbac:
+  create: false

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}
+data:
+  chart-name: "{{ .Chart.Name }}"
+  chart-version: "{{ .Chart.Version }}"
+  app-version: "{{ .Chart.AppVersion }}"
+  release-name: "{{ .Release.Name }}"
+  namespace: "{{ .Release.NameSpace }}"
+  replicas: "{{ .Values.replicaCount }}"

@@ -1,0 +1,55 @@
+apiVerison: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "myapp.fullName" . }}
+  labels: 
+    {{ include "myapp.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "myapp.fullName" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "myapp.fullName" . }}
+    spec:
+      {{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.image.pullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
+    containers:
+      - name: {{ include "myapp.fullName" . }}
+        {{- with .Values.image }}
+        tag: "{{ .Repository }}:{{ .tag }}"
+        {{- end }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+          - containerPort: {{ .Values.service.port }}
+        {{- if .Values.resources }}
+        resources:
+{{ toYaml .Values.resources | nindent 12 }}
+        {{- end }}
+        env:
+{{- with .Values.env }}
+{{ toYaml . | nindent 12 }}
+{{- end }}
+
+{{- if .Values.livenessProbe }}
+        livenessProbe:
+{{ toYaml .Values.livenessProbe | nindent 12 }}
+{{- end }}
+
+{{- if .Values.readinessProbe }}
+        readinessProbe:
+{{ toYaml .Values.readinessProbe | nindent 12 }}
+{{- end }}
+
+    {{- if .Values.persistence }}
+    volumes:
+      - name: data
+        persistentVolumeClaim: 
+          claimName: {{ include "myapp.fullName" . }}-pvc
+    {{- end }}

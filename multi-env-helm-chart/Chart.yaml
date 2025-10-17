@@ -1,0 +1,6 @@
+apiVersion: v2
+name: myapp
+description: A simple multi-env example app chart
+appVersion: "1.0.0"
+version: 0.1.0
+type: application

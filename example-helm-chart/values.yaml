@@ -1,0 +1,67 @@
+replicaCount: 1
+
+image:
+  repository: nginx
+  tag: "1.25.2"
+  pullPolicy: IfNotPresent
+  pullSecrets:
+    - regcred
+    - dockercreds
+service:
+  type: ClusterIP
+  port: 80
+
+messages:
+  greeting: "Hello Anuroop"
+  status: "Helm Learning.!"
+  note: "You are doing great!"
+
+texts:
+  first: "Hello"
+  second: "how are you.?"
+  third: "Is everything fine?"  
+
+#resources:
+#  requests:
+#    cpu: 100m
+#    memory: 128Mi
+#  limits:
+#    cpu: 200m
+#    memory: 256Mi
+
+env:
+  mode: debug
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: 80
+  initialDelaySeconds: 80
+  timeoutSeconds: 3
+
+tolerations:
+  - key: "dedicated"
+    operator: "Equal"
+    value: "infra"
+    effect: "NoSchedule"
+
+# To demonstrate required function in helm
+ingress:
+  enabled: false
+  hostname: "sample.example.com"
+
+anuroop:
+  enabled: true
+  size: 1Gi
+  storageClass: nfs
+  accessMode: ReadWriteOnce
+
+redis:
+  enabled: false
+  architecture: standalone
+  auth:
+    enabled: true
+    password: "mypassword"
+  master:
+    persistence:
+      size: 1Gi

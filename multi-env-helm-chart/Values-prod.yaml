@@ -1,0 +1,37 @@
+replicaCount: 3
+
+image:
+  tag: "1.2.0"
+
+env:
+  APP_MODE: "production"
+  LOG_LEVEL: "info"
+
+resources:
+  requests:
+    cpu: 250m
+    memeory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+persistence:
+  enabled: true
+  size: 2Gi
+  accessMode: "ReadWriteOnce"
+  storageClass: "standard"
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 20
+  timeoutSeconds: 3
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 10

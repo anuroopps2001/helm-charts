@@ -1,0 +1,15 @@
+{{- if .Values.anuroop.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "mychart.fullname" . }}-pvc
+  namespace: demo
+spec:
+  accessModes: {{ toYaml (.Values.anuroop.accessMode | list) | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.anuroop.size }}
+  {{- if .Values.anuroop.storageClass }}
+  storageClass: {{ .Values.anuroop.storageClass }}
+  {{- end }}
+{{- end }} 
