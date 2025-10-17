@@ -153,3 +153,97 @@ helm upgrade --install myapp-prod . -n prod --create-namespace -f values.yaml -f
 # override single value on CLI (highest precedence)
 helm upgrade --install myapp-prod . -n prod -f values.yaml -f values-prod.yaml --set image.tag=1.2.3 --atomic
 ```
+
+
+
+
+# Helm Template functions
+
+## 🧩 4️⃣ include Keyword – Reusing Templates
+`include` lets you import a defined template (usually from _helpers.tpl) into another template.
+
+`_helpers.tpl`
+```
+{{- define "mychart.labels" -}}
+app.kubernetes.io/name: {{ .Chart.Name }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/version: {{ .Chart.AppVersion }}
+{{- end -}}
+```
+
+`Use in another file:`
+```bash
+metadata:
+  labels:
+    {{- include "mychart.labels" . | nindent 4 }}
+```
+
+✅ | nindent 4 adds indentation for YAML alignment
+
+## 🧩 5️⃣ with – Changing Context
+
+`with` temporarily changes the . context to a specific object.
+```bash
+{{- with .Values.image }}
+image: {{ .repository }}:{{ .tag }}
+{{- end }}
+```
+
+Here, inside the with block, `.` refers to `.Values.image`.
+
+## 🧩 6️⃣ range – Looping
+
+`range` is used to iterate over lists or maps.
+```bash
+ports:
+{{- range .Values.service.ports }}
+  - containerPort: {{ . }}
+{{- end }}
+```
+
+If `ports: [80, 8080]` in values.yaml, it renders:
+```bash
+ports:
+  - containerPort: 80
+  - containerPort: 8080
+```
+
+## 🧩 7️⃣ if Statements
+Conditionally render blocks only if a value exists or is true.
+
+```bash
+{{- if .Values.image.pullSecrets }}
+imagePullSecrets:
+  {{- range .Values.image.pullSecrets }}
+  - name: {{ . }}
+  {{- end }}
+{{- end }}
+```
+If no `pullSecrets` are defined, this block won’t render.
+
+## 🧩 8️⃣ toYaml & nindent – Clean YAML Rendering
+`toYaml` converts a dictionary or list into properly formatted YAML.
+
+```bash
+resources:
+  {{- toYaml .Values.resources | nindent 2 }}
+```
+
+## 🧩 9️⃣ required – Mandatory Fields
+Used to make sure a value is provided, otherwise Helm throws an error.
+
+```bash
+host: {{ required "ingress.host is required" .Values.ingress.host }}
+```
+
+If `.Values.ingress.host` is missing, Helm stops rendering.
+
+## 🧩 🔟 printf, trunc, trimSuffix – String Manipulation
+
+In `_helpers.tpl`
+```bash
+{{ printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
+```
+
+## 🧩 11️⃣ dict and list Functions
+
