@@ -245,5 +245,101 @@ In `_helpers.tpl`
 {{ printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
 ```
 
-## 🧩 11️⃣ dict and list Functions
+## Values, Overrides, and Reusability in Helm
+### 🧩 1️⃣ Understanding values.yaml
+
+Each chart will be having `values.yaml` file
+
+```bash
+replicaCount: 2
+
+image:
+  repository: nginx
+  tag: "1.25"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+```
+
+Usage in resource template files
+```bash
+{{ .Values.image.repository }}
+{{ .Values.service.port }}
+{{ .Values.replicaCount }}
+```
+### 🧠 2️⃣ Overriding Values
+
+Helm allows you to override values.yaml at runtime using:
+
+1. A separate values file (-f or --values)
+
+2. The --set flag on the command line
+
+```bash
+helm install demo . -f values-prod.yaml
+
+helm install demo . --set replicaCount=3 --set image.tag=stable
+```
+
+### 🧩 3️⃣ Conditional Resources
+Sometimes you only want to create a resource if enabled in values.
+
+`values.yaml`
+```bash
+persistence:
+  enabled: true
+```
+
+`templates/pvc.yaml`
+
+```bash
+{{- if .Values.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "mychart.fullname" . }}-pvc
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+{{- end }}
+```
+
+✅ If `enabled: false`, Helm will not render that PVC manifest.
+
+### 🧩 6️⃣ Default Values and Safe Fallbacks
+
+Use the `default` function to prevent missing values from breaking templates.
+
+```bash
+imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+```
+
+If the user doesn’t specify it in `values.yaml`, it will fall back to `IfNotPresent`.
+
+### 🧩 8️⃣ Using toYaml and nindent for Nested Values
+
+When rendering nested objects (like resources, tolerations, or affinity),
+always use `toYaml` and `nindent` to maintain correct YAML structure.
+
+```bash
+resources:
+{{ toYaml .Values.resources | nindent 2 }}
+```
+
+converts Into
+```bash
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+```
+
+We can use `environment specific values.yaml` files to deploy into different environments Quickly.
 
