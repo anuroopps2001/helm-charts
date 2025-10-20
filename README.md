@@ -343,7 +343,7 @@ resources:
 
 We can use `environment specific values.yaml` files to deploy into different environments Quickly.
 
-## Subcharts & Dependencies in Helm
+## [Subcharts & Dependencies in Helm](https://helm.sh/docs/chart_template_guide/subcharts_and_globals/)
 ### 🧩 1️⃣ What Are Subcharts
 A subchart is a Helm chart that is used as a dependency inside another chart (the parent chart).
 
