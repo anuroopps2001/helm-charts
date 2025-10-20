@@ -1,5 +1,5 @@
 
-# Helm repos
+# [Helm repos](https://helm.sh/docs/helm/helm_repo/)
 
 ## Add external repo(s) & update index
 ```bash
@@ -157,7 +157,7 @@ helm upgrade --install myapp-prod . -n prod -f values.yaml -f values-prod.yaml -
 
 
 
-# Helm Template functions
+## [Helm Template functions](https://helm.sh/docs/chart_template_guide/functions_and_pipelines/)
 
 ## 🧩 4️⃣ include Keyword – Reusing Templates
 `include` lets you import a defined template (usually from _helpers.tpl) into another template.
