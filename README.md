@@ -343,3 +343,239 @@ resources:
 
 We can use `environment specific values.yaml` files to deploy into different environments Quickly.
 
+## Subcharts & Dependencies in Helm
+### 🧩 1️⃣ What Are Subcharts
+A subchart is a Helm chart that is used as a dependency inside another chart (the parent chart).
+
+They are useful when:
+
+* You want to include multiple related components (e.g. `app + database`)
+
+* You want to reuse existing charts (e.g. Bitnami’s Redis, MySQL, etc.)
+
+* You want modular and maintainable deployments
+
+Example:
+
+```bash
+myapp/
+├── Chart.yaml
+├── values.yaml
+├── charts/            # subcharts live here
+│   └── redis/         # a subchart (dependency)
+└── templates/
+```
+
+### 🧠 2️⃣ Declaring Dependencies
+Dependencies are declared in the parent chart’s `Chart.yaml` under the `dependencies:` section.
+
+Example:
+```bash
+apiVersion: v2
+name: myapp
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+  - name: redis
+    version: 17.x.x
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+```
+
+📌 Notes:
+
+ * name: — the chart name from the repo
+
+* version: — the subchart version
+
+* repository: — URL or local path
+
+* condition: — optional key that enables/disables the subchart (redis.enabled in values.yaml)
+
+### 🧩 3️⃣ Updating Dependencies
+After defining dependencies in `Chart.yaml`, run:
+
+```bash
+helm dependency update
+```
+
+✅ This will:
+
+* Download the subcharts listed in dependencies
+
+* Store them inside the charts/ directory as .tgz packages
+
+You can check them:
+```bash
+ls charts/
+```
+
+### 🧩 4️⃣ Configuring Subchart Values
+Subchart configuration values are defined in the parent’s `values.yaml` under the subchart key.
+Example:
+```bash
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+```
+These values will override the subchart’s own defaults (`redis/values.yaml`).
+
+To view what keys are available for configuration:
+```bash
+helm show values bitnami/redis
+```
+
+### 🧩 5️⃣ Enabling / Disabling a Subchart
+You can use the `condition:` field (defined in Chart.yaml) to toggle deployment of a subchart.
+
+Example:
+```bash
+# Chart.yaml
+dependencies:
+  - name: redis
+    version: 17.x.x
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+```
+
+In `values.yaml`:
+```bash
+redis:
+  enabled: false
+```
+
+✅ When you run:
+```bash
+helm template demo .
+```
+
+Redis resources will not appear in the rendered output.
+
+If you set `redis.enabled: true`, Helm will render and deploy all Redis manifests.
+
+### 🧩 6️⃣ Inspecting Subchart Resources
+After installation, you can verify subchart resources:
+
+```bash
+helm install demo . -n demo --create-namespace
+kubectl get all -n demo -l app.kubernetes.io/instance=demo
+```
+
+Helm manages subcharts as part of the same release —
+all subchart resources share the same `.Release.Name`.
+
+### 🧩 7️⃣ Overriding Subchart Values
+Option 1: using parent values.yaml
+
+```bash
+redis:
+  master:
+    persistence:
+      size: 2Gi
+```
+
+Option 2: using CLI flag
+
+```bash
+helm install demo . -n demo --set redis.master.persistence.size=2Gi
+```
+
+Option 3: dedicated override file
+```bash
+helm install demo . -n demo -f values.yaml -f redis-overrides.yaml
+```
+### 🧩 8️⃣ Subchart Value Scope
+* Subchart values are namespaced under their chart name.
+Example: `redis.master.persistence.size`
+
+* Subcharts cannot access parent values, unless explicitly defined under `global:`.
+
+### 🧩 9️⃣ Using Global Values
+You can define shared values in the `global:` section of `values.yaml`.
+These are visible to both parent and subcharts.
+
+Example:
+```bash
+global:
+  imageRegistry: myregistry.io
+
+redis:
+  image:
+    registry: {{ .Values.global.imageRegistry }}
+```
+
+### 🧩 🔟 Verifying Dependency Tree
+To list dependencies declared for a chart:
+```bash
+helm dependency list
+```
+
+To verify if they are downloaded properly:
+```bash
+helm dependency update
+ls charts/
+```
+
+To inspect subchart details:
+```bash
+helm show chart charts/redis-*.tgz
+```
+
+### 🧩 11️⃣ Real Example: myapp with Redis Subchart
+
+`Chart.yaml`
+```bash
+apiVersion: v2
+name: myapp
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+  - name: redis
+    version: 17.9.2
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+```
+
+`values.yaml`
+```bash
+redis:
+  enabled: true
+  auth:
+    enabled: false
+```
+
+Commands:
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm dependency update
+helm install demo . -n demo --create-namespace
+```
+
+Result:
+
+* Helm installs both your myapp templates and the Redis resources from Bitnami.
+
+### 🧩 12️⃣ Disabling the Subchart
+If you set in `values.yaml`:
+
+```bash
+redis:
+  enabled: false
+```
+
+and run:
+```bash
+helm template demo .
+```
+
+✅ Only your custom templates will render — no Redis resources.
+
+### 🧩 13️⃣ Subchart Lifecycle
+* Subchart upgrades automatically when the parent chart is upgraded.
+
+* Each subchart’s templates are rendered during the parent’s `helm install` / `upgrade`.
+
+* Subchart hooks (pre/post-install) also execute as part of the same Helm release.
+
