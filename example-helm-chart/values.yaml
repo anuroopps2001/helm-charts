@@ -51,7 +51,7 @@ ingress:
   hostname: "sample.example.com"
 
 anuroop:
-  enabled: true
+  enabled: false
   size: 1Gi
   storageClass: nfs
   accessMode: ReadWriteOnce
