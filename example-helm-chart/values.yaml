@@ -17,6 +17,7 @@ messages:
   note: "You are doing great!"
 
 texts:
+  enabled: false
   first: "Hello"
   second: "how are you.?"
   third: "Is everything fine?"  
