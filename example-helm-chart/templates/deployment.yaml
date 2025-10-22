@@ -39,4 +39,4 @@ spec:
           {{- if .Values.readinessProbe }}
           readinessProbe: {{ toYaml .Values.readinessProbe | nindent 12 }}
           {{- end }}
-          tolerations: {{- toYaml (.Values.tolerations | default list) | nindent 12 }}
+        {{/*  tolerations: {{- toYaml (.Values.tolerations | default list) | nindent 12 }} */}}
